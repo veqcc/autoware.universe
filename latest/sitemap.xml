@@ -441,11 +441,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://autowarefoundation.github.io/autoware.universe/latest/evaluator/tier4_metrics_rviz_plugin/</loc>
-         <lastmod>2024-05-14</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://autowarefoundation.github.io/autoware.universe/latest/launch/tier4_autoware_api_launch/</loc>
          <lastmod>2024-05-14</lastmod>
          <changefreq>daily</changefreq>
@@ -1692,11 +1687,6 @@
     </url>
     <url>
          <loc>https://autowarefoundation.github.io/autoware.universe/latest/system/velodyne_monitor/</loc>
-         <lastmod>2024-05-14</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://autowarefoundation.github.io/autoware.universe/latest/tools/rqt_diagnostic_graph_monitor/</loc>
          <lastmod>2024-05-14</lastmod>
          <changefreq>daily</changefreq>
     </url>
