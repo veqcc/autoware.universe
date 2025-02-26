@@ -7,6 +7,7 @@ autoware_package()
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
+find_package(agnocastlib REQUIRED)
 
 include_directories(
   SYSTEM
@@ -15,6 +16,11 @@ include_directories(
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/node.cpp
+)
+
+ament_target_dependencies(${PROJECT_NAME} agnocastlib)
+target_include_directories(${PROJECT_NAME} PRIVATE
+  ${agnocastlib_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME}
