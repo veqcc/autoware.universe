@@ -15,7 +15,7 @@
 #ifndef OCCUPANCY_GRID_MAP_OUTLIER_FILTER_NODE_HPP_
 #define OCCUPANCY_GRID_MAP_OUTLIER_FILTER_NODE_HPP_
 
-#include "agnocast.hpp"
+#include "agnocast/agnocast.hpp"
 #include "autoware/pointcloud_preprocessor/filter.hpp"
 #include "autoware/universe_utils/ros/published_time_publisher.hpp"
 #include "autoware/universe_utils/system/time_keeper.hpp"

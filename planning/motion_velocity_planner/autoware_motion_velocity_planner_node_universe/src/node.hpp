@@ -15,7 +15,7 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
-#include "agnocast.hpp"
+#include "agnocast/agnocast.hpp"
 #include "planner_manager.hpp"
 
 #include <autoware/motion_velocity_planner_common_universe/planner_data.hpp>

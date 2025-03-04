@@ -52,22 +52,23 @@
 #ifndef AUTOWARE__POINTCLOUD_PREPROCESSOR__FILTER_HPP_
 #define AUTOWARE__POINTCLOUD_PREPROCESSOR__FILTER_HPP_
 
+#include "agnocast/agnocast.hpp"
 #include "autoware/pointcloud_preprocessor/transform_info.hpp"
+
+#include <boost/thread/mutex.hpp>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/sync_policies/exact_time.h>
+#include <message_filters/synchronizer.h>
+#include <pcl/filters/filter.h>
+#include <sensor_msgs/msg/point_cloud2.h>
 
 #include <memory>
 #include <string>
 #include <vector>
 
 // PCL includes
-#include <boost/thread/mutex.hpp>
-
-#include <pcl/filters/filter.h>
-#include <sensor_msgs/msg/point_cloud2.h>
-// PCL includes
-#include <message_filters/subscriber.h>
-#include <message_filters/sync_policies/approximate_time.h>
-#include <message_filters/sync_policies/exact_time.h>
-#include <message_filters/synchronizer.h>
 #include <pcl/pcl_base.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -75,8 +76,6 @@
 #include <pcl_msgs/msg/point_indices.h>
 
 // Include tier4 autoware utils
-#include "agnocast.hpp"
-
 #include <autoware/universe_utils/ros/debug_publisher.hpp>
 #include <autoware/universe_utils/ros/managed_transform_buffer.hpp>
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>

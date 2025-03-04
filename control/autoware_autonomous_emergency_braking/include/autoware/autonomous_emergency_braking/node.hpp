@@ -15,7 +15,7 @@
 #ifndef AUTOWARE__AUTONOMOUS_EMERGENCY_BRAKING__NODE_HPP_
 #define AUTOWARE__AUTONOMOUS_EMERGENCY_BRAKING__NODE_HPP_
 
-#include "agnocast.hpp"
+#include "agnocast/agnocast.hpp"
 #include "autoware/universe_utils/system/time_keeper.hpp"
 
 #include <autoware/motion_utils/trajectory/trajectory.hpp>

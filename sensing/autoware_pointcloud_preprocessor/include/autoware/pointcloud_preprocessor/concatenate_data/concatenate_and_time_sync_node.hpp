@@ -22,7 +22,7 @@
 #include <vector>
 
 // ROS includes
-#include "agnocast.hpp"
+#include "agnocast/agnocast.hpp"
 #include "cloud_collector.hpp"
 #include "collector_matching_strategy.hpp"
 #include "combine_cloud_handler.hpp"

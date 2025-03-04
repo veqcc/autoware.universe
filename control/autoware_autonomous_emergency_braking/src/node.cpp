@@ -60,7 +60,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #endif
 
-#include "agnocast.hpp"
+#include "agnocast/agnocast.hpp"
 
 namespace
 {
