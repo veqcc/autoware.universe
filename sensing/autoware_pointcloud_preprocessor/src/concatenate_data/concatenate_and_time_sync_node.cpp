@@ -121,14 +121,18 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
     }
   }
 
+  auto agnocast_cbg = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   for (const std::string & topic : params_.input_topics) {
     std::function<void(const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)>
       callback = std::bind(
         &PointCloudConcatenateDataSynchronizerComponent::cloud_callback, this,
         std::placeholders::_1, topic);
 
+    agnocast::SubscriptionOptions sub_options;
+    sub_options.callback_group = agnocast_cbg;
     auto pointcloud_sub = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
-      this, topic, rclcpp::SensorDataQoS().keep_last(params_.maximum_queue_size), callback);
+      this, topic, rclcpp::SensorDataQoS().keep_last(params_.maximum_queue_size), callback,
+      sub_options);
     pointcloud_subs_.push_back(pointcloud_sub);
   }
   RCLCPP_DEBUG_STREAM(
