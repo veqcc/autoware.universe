@@ -69,7 +69,7 @@ bool CloudCollector::topic_exists(const std::string & topic_name)
 
 bool CloudCollector::process_pointcloud(
   const std::string & topic_name,
-  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> & cloud)
+  const AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2) & cloud)
 {
   std::lock_guard<std::mutex> concatenate_lock(concatenate_mutex_);
   if (status_ == CollectorStatus::Finished) {
@@ -123,13 +123,13 @@ void CloudCollector::concatenate_callback()
 }
 
 ConcatenatedCloudResult CloudCollector::concatenate_pointclouds(
-  std::unordered_map<std::string, agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2>> &
+  std::unordered_map<std::string, AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2)> &
     topic_to_cloud_map)
 {
   return combine_cloud_handler_->combine_pointclouds(topic_to_cloud_map);
 }
 
-std::unordered_map<std::string, agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2>>
+std::unordered_map<std::string, AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2)>
 CloudCollector::get_topic_to_cloud_map()
 {
   return topic_to_cloud_map_;

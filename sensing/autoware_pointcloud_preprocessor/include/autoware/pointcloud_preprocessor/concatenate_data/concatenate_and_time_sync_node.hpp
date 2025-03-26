@@ -22,7 +22,7 @@
 #include <vector>
 
 // ROS includes
-#include "agnocast/agnocast.hpp"
+#include <autoware_agnocast_wrapper/autoware_agnocast_wrapper.hpp>
 #include "cloud_collector.hpp"
 #include "collector_matching_strategy.hpp"
 #include "combine_cloud_handler.hpp"
@@ -100,7 +100,7 @@ private:
   static constexpr const char * default_sync_topic_postfix = "_synchronized";
 
   // subscribers
-  std::vector<agnocast::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> pointcloud_subs_;
+  std::vector<AUTOWARE_SUBSCRIPTION_PTR(sensor_msgs::msg::PointCloud2)> pointcloud_subs_;
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr twist_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
@@ -114,7 +114,7 @@ private:
   diagnostic_updater::Updater diagnostic_updater_{this};
 
   void cloud_callback(
-    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> & input_ptr,
+    const AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2) & input_ptr,
     const std::string & topic_name);
   void twist_callback(const geometry_msgs::msg::TwistWithCovarianceStamped::ConstSharedPtr input);
   void odom_callback(const nav_msgs::msg::Odometry::ConstSharedPtr input);

@@ -13,7 +13,7 @@ find_package(Sophus REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
 find_package(CGAL REQUIRED COMPONENTS Core)
-find_package(agnocastlib REQUIRED)
+find_package(autoware_agnocast_wrapper REQUIRED)
 
 include_directories(
   include
@@ -34,7 +34,7 @@ target_include_directories(pointcloud_preprocessor_filter_base PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
   ${autoware_point_types_INCLUDE_DIRS}
-  ${agnocastlib_INCLUDE_DIRS}
+  ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
 ament_target_dependencies(pointcloud_preprocessor_filter_base
@@ -47,7 +47,7 @@ ament_target_dependencies(pointcloud_preprocessor_filter_base
   autoware_universe_utils
   pcl_ros
   autoware_point_types
-  agnocastlib
+  autoware_agnocast_wrapper
 )
 
 add_library(faster_voxel_grid_downsample_filter SHARED

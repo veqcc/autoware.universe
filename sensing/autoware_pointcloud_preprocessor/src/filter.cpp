@@ -92,10 +92,10 @@ autoware::pointcloud_preprocessor::Filter::Filter(
 
   // Set publisher
   {
-    agnocast::PublisherOptions pub_options;
+    AUTOWARE_PUBLISHER_OPTIONS pub_options;
     pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
-    pub_output_ = agnocast::create_publisher<PointCloud2>(
-      this, "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_), pub_options);
+    pub_output_ = AUTOWARE_CREATE_PUBLISHER(PointCloud2,
+        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_), pub_options);
   }
 
   subscribe(filter_name);
@@ -196,7 +196,7 @@ void autoware::pointcloud_preprocessor::Filter::unsubscribe()
 void autoware::pointcloud_preprocessor::Filter::computePublish(
   const PointCloud2ConstPtr & input, const IndicesPtr & indices)
 {
-  agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_->borrow_loaned_message();
+  auto output = ALLOCATE_OUTPUT_MESSAGE(pub_output_);
 
   // Call the virtual method in the child
   filter(input, indices, *output);
@@ -436,7 +436,7 @@ void autoware::pointcloud_preprocessor::Filter::faster_input_indices_callback(
     vindices.reset(new std::vector<int>(indices->indices));
   }
 
-  agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_->borrow_loaned_message();
+  auto output = ALLOCATE_OUTPUT_MESSAGE(pub_output_);
 
   // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
   faster_filter(cloud, vindices, *output, transform_info);

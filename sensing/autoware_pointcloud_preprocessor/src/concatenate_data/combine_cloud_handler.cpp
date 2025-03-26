@@ -110,7 +110,7 @@ std::deque<geometry_msgs::msg::TwistStamped> CombineCloudHandler::get_twist_queu
 }
 
 void CombineCloudHandler::convert_to_xyzirc_cloud(
-  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> & input_cloud,
+  const AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2) & input_cloud,
   sensor_msgs::msg::PointCloud2::SharedPtr & xyzirc_cloud)
 {
   xyzirc_cloud->header = input_cloud->header;
@@ -191,7 +191,7 @@ void CombineCloudHandler::correct_pointcloud_motion(
 }
 
 ConcatenatedCloudResult CombineCloudHandler::combine_pointclouds(
-  std::unordered_map<std::string, agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2>> &
+  std::unordered_map<std::string, AUTOWARE_MESSAGE_PTR(sensor_msgs::msg::PointCloud2)> &
     topic_to_cloud_map)
 {
   ConcatenatedCloudResult concatenate_cloud_result;

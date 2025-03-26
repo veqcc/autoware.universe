@@ -15,7 +15,7 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
-#include "agnocast/agnocast.hpp"
+#include <autoware_agnocast_wrapper/autoware_agnocast_wrapper.hpp>
 #include "planner_manager.hpp"
 
 #include <autoware/motion_velocity_planner_common_universe/planner_data.hpp>
@@ -68,7 +68,7 @@ private:
   autoware::universe_utils::InterProcessPollingSubscriber<
     autoware_perception_msgs::msg::PredictedObjects>
     sub_predicted_objects_{this, "~/input/dynamic_objects"};
-  agnocast::PollingSubscriber<sensor_msgs::msg::PointCloud2> sub_no_ground_pointcloud_{
+  AUTOWARE_POLLING_SUBSCRIBER(sensor_msgs::msg::PointCloud2) sub_no_ground_pointcloud_{
     this, "~/input/no_ground_pointcloud", autoware::universe_utils::SingleDepthSensorQoS()};
   autoware::universe_utils::InterProcessPollingSubscriber<nav_msgs::msg::Odometry>
     sub_vehicle_odometry_{this, "~/input/vehicle_odometry"};
@@ -85,7 +85,7 @@ private:
   void on_trajectory(
     const autoware_planning_msgs::msg::Trajectory::ConstSharedPtr input_trajectory_msg);
   std::optional<pcl::PointCloud<pcl::PointXYZ>> process_no_ground_pointcloud(
-    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg);
+    const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) msg);
   void on_lanelet_map(const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr msg);
   void process_traffic_signals(
     const autoware_perception_msgs::msg::TrafficLightGroupArray::ConstSharedPtr msg);

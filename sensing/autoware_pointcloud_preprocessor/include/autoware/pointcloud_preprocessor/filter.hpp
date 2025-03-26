@@ -52,7 +52,7 @@
 #ifndef AUTOWARE__POINTCLOUD_PREPROCESSOR__FILTER_HPP_
 #define AUTOWARE__POINTCLOUD_PREPROCESSOR__FILTER_HPP_
 
-#include "agnocast/agnocast.hpp"
+#include <autoware_agnocast_wrapper/autoware_agnocast_wrapper.hpp>
 #include "autoware/pointcloud_preprocessor/transform_info.hpp"
 
 #include <boost/thread/mutex.hpp>
@@ -136,10 +136,9 @@ public:
 protected:
   /** \brief The input PointCloud2 subscriber. */
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_input_;
-  agnocast::Subscription<PointCloud2>::SharedPtr sub_input_agnocast_;
 
   /** \brief The output PointCloud2 publisher. */
-  agnocast::Publisher<PointCloud2>::SharedPtr pub_output_;
+  AUTOWARE_PUBLISHER_PTR(PointCloud2) pub_output_;
 
   /** \brief The message filter subscriber for PointCloud2. */
   message_filters::Subscriber<PointCloud2> sub_input_filter_;

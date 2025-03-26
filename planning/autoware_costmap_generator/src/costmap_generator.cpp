@@ -301,7 +301,7 @@ void CostmapGenerator::onTimer()
   }
 
   if (param_->use_points) {
-    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> points = sub_points_.takeData();
+    const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) points = sub_points_.takeData();
     if (points.get()) {
       autoware::universe_utils::ScopedTimeTrack st("generatePointsCostmap()", *time_keeper_);
       costmap_[LayerName::points] = generatePointsCostmap(points, tf.transform.translation.z);
@@ -359,7 +359,7 @@ void CostmapGenerator::initGridmap()
 }
 
 grid_map::Matrix CostmapGenerator::generatePointsCostmap(
-  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> in_points,
+  const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) in_points,
   const double vehicle_to_map_z)
 {
   geometry_msgs::msg::TransformStamped points2costmap;
