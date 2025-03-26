@@ -1,5 +1,5 @@
 <launch>
-  <arg name="heaphook_path" description="Path to the heaphook library"/>
+  <arg name="agnocast_heaphook_path" description="Path to the agnocast heaphook library"/>
   <!-- planning module -->
 
   <!-- mission planner -->
@@ -26,7 +26,7 @@
     <group>
       <push-ros-namespace namespace="scenario_planning"/>
       <include file="$(find-pkg-share tier4_planning_launch)/launch/scenario_planning/scenario_planning.launch.xml">
-        <arg name="heaphook_path" value="$(var heaphook_path)"/>
+        <arg name="agnocast_heaphook_path" value="$(var agnocast_heaphook_path)"/>
         <arg name="enable_all_modules_auto_mode" value="$(var enable_all_modules_auto_mode)"/>
         <arg name="is_simulation" value="$(var is_simulation)"/>
       </include>
