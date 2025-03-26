@@ -90,31 +90,12 @@ autoware::pointcloud_preprocessor::Filter::Filter(
         << " - max_queue_size   : " << max_queue_size_);
   }
 
-  if (
-    this->get_node_topics_interface()->resolve_topic_name("output") ==
-      "/sensing/lidar/top/pointcloud_before_sync" ||
-    this->get_node_topics_interface()->resolve_topic_name("output") ==
-      "/sensing/lidar/left/pointcloud_before_sync" ||
-    this->get_node_topics_interface()->resolve_topic_name("output") ==
-      "/sensing/lidar/right/pointcloud_before_sync" ||
-    this->get_node_topics_interface()->resolve_topic_name("output") ==
-      "/sensing/lidar/rear/pointcloud_before_sync") {
-    use_agnocast_publish_ = true;
-  }
-
   // Set publisher
   {
-    if (use_agnocast_publish_) {
-      agnocast::PublisherOptions pub_options;
-      pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
-      pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
-        this, "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_), pub_options);
-    } else {
-      rclcpp::PublisherOptions pub_options;
-      pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
-      pub_output_ = this->create_publisher<PointCloud2>(
-        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_), pub_options);
-    }
+    agnocast::PublisherOptions pub_options;
+    pub_options.qos_overriding_options = rclcpp::QosOverridingOptions::with_default_policies();
+    pub_output_ = agnocast::create_publisher<PointCloud2>(
+      this, "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_), pub_options);
   }
 
   subscribe(filter_name);
@@ -215,7 +196,7 @@ void autoware::pointcloud_preprocessor::Filter::unsubscribe()
 void autoware::pointcloud_preprocessor::Filter::computePublish(
   const PointCloud2ConstPtr & input, const IndicesPtr & indices)
 {
-  auto output = std::make_unique<PointCloud2>();
+  agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_->borrow_loaned_message();
 
   // Call the virtual method in the child
   filter(input, indices, *output);
@@ -227,7 +208,9 @@ void autoware::pointcloud_preprocessor::Filter::computePublish(
 
   // Publish a boost shared ptr
   pub_output_->publish(std::move(output));
-  published_time_publisher_->publish_if_subscribed(pub_output_, input->header.stamp);
+
+  // TODO(Ryuta Kambe): solve https://github.com/tier4/agnocast/issues/164
+  // published_time_publisher_->publish_if_subscribed(pub_output_, input->header.stamp);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,30 +436,18 @@ void autoware::pointcloud_preprocessor::Filter::faster_input_indices_callback(
     vindices.reset(new std::vector<int>(indices->indices));
   }
 
-  if (use_agnocast_publish_) {
-    agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
+  agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_->borrow_loaned_message();
 
-    faster_filter(cloud, vindices, *output, transform_info);
+  // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
+  faster_filter(cloud, vindices, *output, transform_info);
 
-    if (!convert_output_costly(*output)) return;
+  if (!convert_output_costly(*output)) return;
 
-    output->header.stamp = cloud->header.stamp;
-    pub_output_agnocast_->publish(std::move(output));
+  output->header.stamp = cloud->header.stamp;
+  pub_output_->publish(std::move(output));
 
-    // TODO(Ryuta Kambe): solve https://github.com/tier4/agnocast/issues/164
-    // published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
-  } else {
-    auto output = std::make_unique<PointCloud2>();
-
-    // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
-    faster_filter(cloud, vindices, *output, transform_info);
-
-    if (!convert_output_costly(*output)) return;
-
-    output->header.stamp = cloud->header.stamp;
-    pub_output_->publish(std::move(output));
-    published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
-  }
+  // TODO(Ryuta Kambe): solve https://github.com/tier4/agnocast/issues/164
+  // published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
 }
 
 // TODO(sykwer): Temporary Implementation: Remove this interface when all the filter nodes conform

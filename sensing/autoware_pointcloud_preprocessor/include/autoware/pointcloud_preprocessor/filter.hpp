@@ -139,8 +139,7 @@ protected:
   agnocast::Subscription<PointCloud2>::SharedPtr sub_input_agnocast_;
 
   /** \brief The output PointCloud2 publisher. */
-  rclcpp::Publisher<PointCloud2>::SharedPtr pub_output_;
-  agnocast::Publisher<PointCloud2>::SharedPtr pub_output_agnocast_;
+  agnocast::Publisher<PointCloud2>::SharedPtr pub_output_;
 
   /** \brief The message filter subscriber for PointCloud2. */
   message_filters::Subscriber<PointCloud2> sub_input_filter_;
@@ -271,8 +270,6 @@ protected:
   }
 
 private:
-  bool use_agnocast_publish_ = false;
-
   /** \brief Parameter service callback result : needed to be hold */
   OnSetParametersCallbackHandle::SharedPtr set_param_res_filter_;
 
