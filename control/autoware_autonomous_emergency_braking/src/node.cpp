@@ -60,7 +60,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #endif
 
-#include "agnocast/agnocast.hpp"
+#include "autoware_agnocast_wrapper/autoware_agnocast_wrapper.hpp"
 
 namespace
 {
@@ -300,7 +300,7 @@ void AEB::onImu(const Imu::ConstSharedPtr input_msg)
   tf2::doTransform(input_msg->angular_velocity, *angular_velocity_ptr_, transform_stamped.value());
 }
 
-void AEB::onPointCloud(const agnocast::ipc_shared_ptr<PointCloud2> input_msg)
+void AEB::onPointCloud(const AUTOWARE_MESSAGE_PTR(const PointCloud2) input_msg)
 {
   autoware::universe_utils::ScopedTimeTrack st(__func__, *time_keeper_);
   PointCloud::Ptr pointcloud_ptr(new PointCloud);
@@ -359,7 +359,7 @@ bool AEB::fetchLatestData()
   }
 
   if (use_pointcloud_data_) {
-    const agnocast::ipc_shared_ptr<PointCloud2> pointcloud_ptr = sub_point_cloud_.takeData();
+    const AUTOWARE_MESSAGE_PTR(const PointCloud2) pointcloud_ptr = sub_point_cloud_.takeData();
     if (!pointcloud_ptr) {
       return missing("object pointcloud message");
     }

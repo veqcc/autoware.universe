@@ -138,7 +138,7 @@ void BehaviorVelocityPlannerNode::onParam()
 }
 
 void BehaviorVelocityPlannerNode::processNoGroundPointCloud(
-  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)
+  const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) msg)
 {
   geometry_msgs::msg::TransformStamped transform;
   try {
@@ -258,7 +258,7 @@ bool BehaviorVelocityPlannerNode::processData(rclcpp::Clock clock)
     is_ready = false;
   }
 
-  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> no_ground_pointcloud =
+  const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) no_ground_pointcloud =
     sub_no_ground_pointcloud_.takeData();
   if (no_ground_pointcloud) {
     processNoGroundPointCloud(no_ground_pointcloud);

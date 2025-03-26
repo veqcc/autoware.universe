@@ -8,7 +8,7 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
-find_package(agnocastlib REQUIRED)
+find_package(autoware_agnocast_wrapper REQUIRED)
 find_package(OpenMP)
 ament_auto_find_build_dependencies()
 
@@ -32,9 +32,9 @@ target_link_libraries(${PROJECT_NAME}
   ${PCL_LIBRARIES}
 )
 
-ament_target_dependencies(${PROJECT_NAME} agnocastlib)
+ament_target_dependencies(${PROJECT_NAME} autoware_agnocast_wrapper)
 target_include_directories(${PROJECT_NAME} PRIVATE
-  ${agnocastlib_INCLUDE_DIRS}
+  ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
 if(OPENMP_FOUND)

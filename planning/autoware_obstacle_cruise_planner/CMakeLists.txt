@@ -5,7 +5,7 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 find_package(Eigen3 REQUIRED)
-find_package(agnocastlib REQUIRED)
+find_package(autoware_agnocast_wrapper REQUIRED)
 
 ament_auto_add_library(autoware_obstacle_cruise_planner_core SHARED
   src/node.cpp
@@ -17,9 +17,9 @@ ament_auto_add_library(autoware_obstacle_cruise_planner_core SHARED
   src/planner_interface.cpp
 )
 
-ament_target_dependencies(autoware_obstacle_cruise_planner_core agnocastlib)
+ament_target_dependencies(autoware_obstacle_cruise_planner_core autoware_agnocast_wrapper)
 target_include_directories(autoware_obstacle_cruise_planner_core PRIVATE
-  ${agnocastlib_INCLUDE_DIRS}
+  ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
 rclcpp_components_register_node(autoware_obstacle_cruise_planner_core

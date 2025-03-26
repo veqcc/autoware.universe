@@ -45,7 +45,7 @@
 #ifndef AUTOWARE__COSTMAP_GENERATOR__COSTMAP_GENERATOR_HPP_
 #define AUTOWARE__COSTMAP_GENERATOR__COSTMAP_GENERATOR_HPP_
 
-#include "agnocast/agnocast.hpp"
+#include <autoware_agnocast_wrapper/autoware_agnocast_wrapper.hpp>
 #include "autoware/costmap_generator/utils/objects_to_costmap.hpp"
 #include "autoware/costmap_generator/utils/points_to_costmap.hpp"
 #include "costmap_generator_node_parameters.hpp"
@@ -103,7 +103,7 @@ private:
     pub_processing_time_ms_;
 
   rclcpp::Subscription<autoware_map_msgs::msg::LaneletMapBin>::SharedPtr sub_lanelet_bin_map_;
-  agnocast::PollingSubscriber<sensor_msgs::msg::PointCloud2> sub_points_{
+  AUTOWARE_POLLING_SUBSCRIBER(sensor_msgs::msg::PointCloud2) sub_points_{
     this, "~/input/points_no_ground", autoware::universe_utils::SingleDepthSensorQoS()};
   autoware::universe_utils::InterProcessPollingSubscriber<PredictedObjects> sub_objects_{
     this, "~/input/objects"};
@@ -178,7 +178,7 @@ private:
   /// \param[in] in_points: subscribed pointcloud data
   /// \param[in] vehicle_to_map_z: z value of the ego vehicle in the costmap frame
   grid_map::Matrix generatePointsCostmap(
-    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> in_points,
+    const AUTOWARE_MESSAGE_PTR(const sensor_msgs::msg::PointCloud2) in_points,
     const double vehicle_to_map_z);
 
   /// \brief calculate cost from DynamicObjectArray
