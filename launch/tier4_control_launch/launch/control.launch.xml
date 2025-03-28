@@ -183,7 +183,7 @@
       <!-- set a control check container to run all control checker components in the same process -->
       <node_container pkg="rclcpp_components" exec="$(var container_executable)" name="control_check_container" namespace="">
         <env name="LD_PRELOAD" value="$(var new_ld_preload)" />
-        <env name="MEMPOOL_SIZE" value="134217728"/>
+        <env name="AGNOCAST_MEMPOOL_SIZE" value="134217728"/>
         <composable_node pkg="autoware_glog_component" plugin="autoware::glog_component::GlogComponent" name="glog_control_check_container_component"/>
       </node_container>
 

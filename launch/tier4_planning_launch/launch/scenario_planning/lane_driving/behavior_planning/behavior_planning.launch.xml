@@ -177,7 +177,7 @@
 
   <node_container pkg="rclcpp_components" exec="$(var container_type)" name="behavior_planning_container" namespace="" args="" output="both">
     <env name="LD_PRELOAD" value="$(var new_ld_preload)" />
-    <env name="MEMPOOL_SIZE" value="1024"/>
+    <env name="AGNOCAST_MEMPOOL_SIZE" value="1024"/>
 
     <composable_node pkg="autoware_behavior_path_planner" plugin="autoware::behavior_path_planner::BehaviorPathPlannerNode" name="behavior_path_planner" namespace="">
       <!-- topic remap -->
