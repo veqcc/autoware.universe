@@ -23,6 +23,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(${PROJECT_NAME})
+
 target_link_libraries(${PROJECT_NAME}
   ${PCL_LIBRARIES}
 )

@@ -29,6 +29,8 @@ target_include_directories(${AEB_NODE} PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(${AEB_NODE})
+
 target_link_libraries(${AEB_NODE} autoware_autonomous_emergency_braking_helpers)
 rclcpp_components_register_node(${AEB_NODE}
   PLUGIN "autoware::motion::control::autonomous_emergency_braking::AEB"

@@ -22,6 +22,8 @@ target_include_directories(autoware_obstacle_cruise_planner_core PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(autoware_obstacle_cruise_planner_core)
+
 rclcpp_components_register_node(autoware_obstacle_cruise_planner_core
   PLUGIN "autoware::motion_planning::ObstacleCruisePlannerNode"
   EXECUTABLE autoware_obstacle_cruise_planner

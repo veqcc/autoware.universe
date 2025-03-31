@@ -50,6 +50,8 @@ ament_target_dependencies(pointcloud_preprocessor_filter_base
   autoware_agnocast_wrapper
 )
 
+autoware_agnocast_wrapper_setup(pointcloud_preprocessor_filter_base)
+
 add_library(faster_voxel_grid_downsample_filter SHARED
   src/downsample_filter/faster_voxel_grid_downsample_filter.cpp
 )

@@ -31,6 +31,8 @@ target_include_directories(costmap_generator_lib PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(costmap_generator_lib)
+
 if(${PCL_VERSION} GREATER_EQUAL 1.12.1)
   find_package(Qhull REQUIRED)
   target_link_libraries(costmap_generator_lib

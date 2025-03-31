@@ -17,6 +17,8 @@ target_include_directories(${PROJECT_NAME}_lib PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(${PROJECT_NAME}_lib)
+
 rclcpp_components_register_node(${PROJECT_NAME}_lib
   PLUGIN "autoware::behavior_velocity_planner::BehaviorVelocityPlannerNode"
   EXECUTABLE ${PROJECT_NAME}_node

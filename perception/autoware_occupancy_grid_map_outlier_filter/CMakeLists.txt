@@ -37,6 +37,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${autoware_agnocast_wrapper_INCLUDE_DIRS}
 )
 
+autoware_agnocast_wrapper_setup(${PROJECT_NAME})
+
 if(OPENMP_FOUND)
   set_target_properties(${PROJECT_NAME} PROPERTIES
     COMPILE_FLAGS ${OpenMP_CXX_FLAGS}
