@@ -59,7 +59,6 @@ public:
     const Side<ProjectionsToBound> & closest_projections_to_bound);
   bool is_critical_departure_persist(const Side<ProjectionsToBound> & closest_projections_to_bound);
 
-  // ==== abnormalities ===
   /**
    * @brief Build an R-tree of uncrossable boundaries (e.g., road_border) from a lanelet map.
    *
@@ -82,10 +81,10 @@ public:
    *
    * @param predicted_traj         Ego's predicted trajectory (from MPC or trajectory follower).
    * @param curr_pose_with_cov     Ego pose with covariance for uncertainty margin calculation.
-   * @return AbnormalitiesData containing footprints, their left/right sides, and projections to
+   * @return DepartureData containing footprints, their left/right sides, and projections to
    * boundaries. Returns an error message string on failure.
    */
-  tl::expected<AbnormalitiesData, std::string> get_abnormalities_data(
+  tl::expected<DepartureData, std::string> get_departure_data(
     const TrajectoryPoints & trajectory_points, const TrajectoryPoints & predicted_traj,
     const geometry_msgs::msg::PoseWithCovariance & curr_pose_with_cov, const double curr_vel,
     const double curr_acc);
@@ -141,22 +140,6 @@ public:
     const EgoSides & ego_sides_from_footprints, const TrajectoryPoints & trimmed_pred_trajectory);
 
   /**
-   * @brief Select the closest projections to road boundaries for a specific side.
-   *
-   * Evaluates multiple abnormality-aware projections (e.g., NORMAL, LOCALIZATION) for each
-   * trajectory index, and selects the best candidate based on lateral distance and classification
-   * logic (CRITICAL/NEAR).
-   *
-   * @param projections_to_bound Abnormality-aware projections to boundaries.
-   * @param side_key             Side to process (left or right).
-   * @return Vector of closest projections with departure classification, or an error message on
-   * failure.
-   */
-  tl::expected<ProjectionsToBound, std::string> get_closest_projections_to_boundaries_side(
-    const Abnormalities<Side<ProjectionsToBound>> & projections_to_bound,
-    const double min_braking_dist, const double max_braking_dist, const SideKey side_key);
-
-  /**
    * @brief Generate filtered departure points for both left and right sides.
    *
    * Converts closest projections into structured `DeparturePoint`s for each side,
@@ -176,16 +159,13 @@ public:
    * @brief Select the closest projections to boundaries for both sides based on all abnormality
    * types.
    *
-   * Invokes `get_closest_projections_to_boundaries_side` for each side and updates the departure
-   * type based on braking feasibility (APPROACHING_DEPARTURE) using trajectory spacing and braking
-   * model.
+   * Invokes `get_closest_projections_for_side` for each side.
    *
-   * @param projections_to_bound Abnormality-wise projections to boundaries.
-   * @return Side<ProjectionsToBound> structure containing selected points for both
-   * sides, or error string.
+   * @param projections_to_bound Footprint sides' projections to boundaries.
+   * @return Side<ProjectionsToBound> structure containing selected points for both sides.
    */
-  tl::expected<Side<ProjectionsToBound>, std::string> get_closest_projections_to_boundaries(
-    const Abnormalities<Side<ProjectionsToBound>> & projections_to_bound, const double curr_vel,
+  Side<ProjectionsToBound> get_closest_projections_to_boundaries(
+    const FootprintMap<Side<ProjectionsToBound>> & projections_to_bound, const double curr_vel,
     const double curr_acc);
 
 private:
