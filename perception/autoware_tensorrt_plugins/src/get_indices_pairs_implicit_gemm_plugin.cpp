@@ -308,6 +308,23 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
 
   tv::Tensor input_indices = tv::from_blob(inputs[0], {input_desc[0].dims.d[0], 4}, tv::int32, 0);
 
+  // Pre-allocate thrust temporary buffer from workspace to avoid cudaMalloc during CUDA graph
+  // capture. Compute the offset past all other extra workspace regions.
+  std::size_t thrust_tmp_offset =
+    static_cast<std::size_t>(spconv_ws_size) + kernel_volume * sizeof(tv::int32);
+  if (!is_subm) {
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(kernel_volume) * static_num_act_in * sizeof(tv::int32);
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32 );
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32);
+  }
+
+  tv::Tensor thrust_tmp = tv::from_blob(
+    static_cast<std::uint8_t *>(workspace) + thrust_tmp_offset,
+    {static_cast<std::int64_t>(kThrustTempBytes)}, tv::uint8, 0);
+
   std::tuple<tv::Tensor, int> pair_res;
 
   tv::Context ctx;
