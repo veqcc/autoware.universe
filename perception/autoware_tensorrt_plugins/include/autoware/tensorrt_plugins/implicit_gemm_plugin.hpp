@@ -20,6 +20,7 @@
 #include <cuda_runtime.h>
 #include <spconvlib/spconv/csrc/sparse/convops/gemmops/GemmTunerSimple.h>  // cSpell:ignore spconvlib
 #include <spconvlib/spconv/csrc/sparse/convops/spops/ConvGemmOps.h>
+#include <tensorview/tensor.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -128,6 +129,9 @@ private:
 
   std::unique_ptr<ConvTunerSimple> tuner_fp32_ptr_{};
   std::unique_ptr<ConvTunerSimple> tuner_fp16_ptr_{};
+
+  // Pre-allocated CPU mask tensor to avoid heap allocation during CUDA graph capture.
+  tv::Tensor mask_tensor_;
 };
 
 }  // namespace nvinfer1::plugin

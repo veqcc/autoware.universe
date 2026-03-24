@@ -294,9 +294,34 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     tv::from_blob(outputs[3], {mask_count, pair_fwd_size_padded}, tv::int32, 0);
   tv::Tensor out_indices = tv::from_blob(
     outputs[0], {is_subm ? input_desc[0].dims.d[0] : out_indices_num_limit_, 4}, tv::int32, 0);
-  tv::Tensor indices_kernel_num = tv::zeros({kernel_volume}, tv::int32, 0);
+
+  // Allocate indices_kernel_num from the workspace instead of tv::zeros to avoid cudaMalloc during
+  // CUDA graph capture. The extra region sits right after the spconv workspace area.
+  int spconv_ws_size = SpconvOps::get_indice_gen_workspace_size(
+    kernel_volume, out_indices_num_limit_, out_indices_num_limit_, out_indices_num_limit_, is_subm,
+    use_int64_hash_k, use_direct_table);
+  void * indices_kernel_num_ptr =
+    static_cast<std::uint8_t *>(workspace) + spconv_ws_size;
+  tv::Tensor indices_kernel_num = tv::from_blob(indices_kernel_num_ptr, {kernel_volume}, tv::int32, 0);
+  cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(std::int32_t), stream);
 
   tv::Tensor input_indices = tv::from_blob(inputs[0], {input_desc[0].dims.d[0], 4}, tv::int32, 0);
+
+  // Pre-allocate thrust temporary buffer from workspace to avoid cudaMalloc during CUDA graph
+  // capture. Compute the offset past all other extra workspace regions.
+  std::size_t thrust_tmp_offset =
+    static_cast<std::size_t>(spconv_ws_size) + kernel_volume * sizeof(std::int32_t);
+  if (!is_subm) {
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(kernel_volume) * static_num_act_in * sizeof(std::int32_t);
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(std::int32_t);
+    thrust_tmp_offset +=
+      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(std::int32_t);
+  }
+  tv::Tensor thrust_tmp = tv::from_blob(
+    static_cast<std::uint8_t *>(workspace) + thrust_tmp_offset,
+    {static_cast<std::int64_t>(kThrustTempBytes)}, tv::uint8, 0);
 
   std::tuple<tv::Tensor, int> pair_res;
 
@@ -313,6 +338,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     ws_tensors.insert(
       {SPCONV_ALLOC_INDICE_NUM_PER_LOC, indices_kernel_num});  // cSpell:ignore INDICE
     StaticAllocator alloc(ws_tensors);
+    alloc.thrust_tmp_tensor_ = thrust_tmp;
 
     // cSpell:ignore indice
     pair_res = SpconvOps::get_indice_pairs_implicit_gemm(
@@ -322,9 +348,21 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
       use_direct_table);
 
   } else {
-    tv::Tensor pair_bwd_padded = tv::empty({kernel_volume, static_num_act_in}, tv::int32, 0);
-    tv::Tensor pair_mask_bwd_padded = tv::empty({mask_count, static_num_act_in}, tv::int32, 0);
-    tv::Tensor mask_argsort_bwd_padded = tv::empty({mask_count, static_num_act_in}, tv::int32, 0);
+    // Allocate bwd tensors from the workspace instead of tv::empty to avoid cudaMalloc during
+    // CUDA graph capture. They are placed after indices_kernel_num in the workspace.
+    std::uint8_t * extra_ptr =
+      static_cast<std::uint8_t *>(indices_kernel_num_ptr) + kernel_volume * sizeof(std::int32_t);
+
+    tv::Tensor pair_bwd_padded =
+      tv::from_blob(extra_ptr, {kernel_volume, static_num_act_in}, tv::int32, 0);
+    extra_ptr += kernel_volume * static_num_act_in * sizeof(std::int32_t);
+
+    tv::Tensor pair_mask_bwd_padded =
+      tv::from_blob(extra_ptr, {mask_count, static_num_act_in}, tv::int32, 0);
+    extra_ptr += mask_count * static_num_act_in * sizeof(std::int32_t);
+
+    tv::Tensor mask_argsort_bwd_padded =
+      tv::from_blob(extra_ptr, {mask_count, static_num_act_in}, tv::int32, 0);
 
     ws_tensors.insert({SPCONV_ALLOC_PAIR_FWD, pair_fwd_padded});
     ws_tensors.insert({SPCONV_ALLOC_PAIR_BWD, pair_bwd_padded});
@@ -340,6 +378,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
       {SPCONV_ALLOC_INDICE_NUM_PER_LOC, indices_kernel_num});  // cSpell:ignore INDICE
 
     StaticAllocator alloc(ws_tensors);
+    alloc.thrust_tmp_tensor_ = thrust_tmp;
 
     // cSpell:ignore indice
     pair_res = SpconvOps::get_indice_pairs_implicit_gemm(
@@ -409,7 +448,28 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
     kernel_volume, out_indices_num_limit_, out_indices_num_limit_, out_indices_num_limit_, is_subm,
     use_int64_hash_k, use_direct_table);
 
-  return static_cast<std::size_t>(workspace_size);
+  // Additional space for indices_kernel_num tensor (kernel_volume * int32).
+  std::size_t total = static_cast<std::size_t>(workspace_size);
+  total += static_cast<std::size_t>(kernel_volume) * sizeof(std::int32_t);
+
+  // Additional space for bwd tensors (only used when !is_subm).
+  if (!is_subm) {
+    bool is_split_mask =
+      params_.algo == static_cast<std::int64_t>(tv::gemm::SparseConvAlgo::kMaskSplitImplicitGemm);
+    int mask_count = is_split_mask ? 2 : 1;
+
+    // pair_bwd_padded: {kernel_volume, out_indices_num_limit_}
+    total += static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(std::int32_t);
+    // pair_mask_bwd_padded: {mask_count, out_indices_num_limit_}
+    total += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(std::int32_t);
+    // mask_argsort_bwd_padded: {mask_count, out_indices_num_limit_}
+    total += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(std::int32_t);
+  }
+
+  // Additional space for thrust temporary buffer used by spconv sort operations.
+  total += kThrustTempBytes;
+
+  return total;
 }
 
 }  // namespace nvinfer1::plugin
