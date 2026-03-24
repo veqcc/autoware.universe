@@ -301,14 +301,10 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     kernel_volume, out_indices_num_limit_, out_indices_num_limit_, out_indices_num_limit_, is_subm,
     use_int64_hash_k, use_direct_table);
   void * indices_kernel_num_ptr = static_cast<std::uint8_t *>(workspace) + spconv_ws_size;
-<<<<<<< Updated upstream
+
   tv::Tensor indices_kernel_num =
     tv::from_blob(indices_kernel_num_ptr, {kernel_volume}, tv::int32, 0);
-  cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(std::int32_t), stream);
-=======
-  tv::Tensor indices_kernel_num = tv::from_blob(indices_kernel_num_ptr, {kernel_volume}, tv::int32, 0);
   cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
->>>>>>> Stashed changes
 
   tv::Tensor input_indices = tv::from_blob(inputs[0], {input_desc[0].dims.d[0], 4}, tv::int32, 0);
 
@@ -447,12 +443,7 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
     int mask_count = is_split_mask ? 2 : 1;
 
     // pair_bwd_padded: {kernel_volume, out_indices_num_limit_}
-<<<<<<< Updated upstream
-    total +=
-      static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(std::int32_t);
-=======
     workspace_size += static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(tv::int32);
->>>>>>> Stashed changes
     // pair_mask_bwd_padded: {mask_count, out_indices_num_limit_}
     workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
     // mask_argsort_bwd_padded: {mask_count, out_indices_num_limit_}
