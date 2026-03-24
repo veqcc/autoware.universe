@@ -316,7 +316,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     thrust_tmp_offset +=
       static_cast<std::size_t>(kernel_volume) * static_num_act_in * sizeof(tv::int32);
     thrust_tmp_offset +=
-      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32 );
+      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32);
     thrust_tmp_offset +=
       static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32);
   }
