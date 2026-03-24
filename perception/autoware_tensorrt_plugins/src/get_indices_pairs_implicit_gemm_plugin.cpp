@@ -443,11 +443,14 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
     int mask_count = is_split_mask ? 2 : 1;
 
     // pair_bwd_padded: {kernel_volume, out_indices_num_limit_}
-    workspace_size += static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(tv::int32);
+    workspace_size +=
+      static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(tv::int32);
     // pair_mask_bwd_padded: {mask_count, out_indices_num_limit_}
-    workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
+    workspace_size +=
+      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
     // mask_argsort_bwd_padded: {mask_count, out_indices_num_limit_}
-    workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
+    workspace_size +=
+      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
   }
 
   return workspace_size;
