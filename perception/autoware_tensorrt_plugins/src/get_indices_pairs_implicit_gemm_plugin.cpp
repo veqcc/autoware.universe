@@ -242,6 +242,48 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::getOutputShapes(
   return 0;
 }
 
+// =========================================================================
+// enqueue() pre-allocation memory layout
+//
+// All tensors are carved out of TensorRT-managed buffers (workspace and
+// output blobs) so that no cudaMalloc is issued during CUDA graph capture.
+//
+// Abbreviations:
+//   KV = kernel_volume
+//   N  = out_indices_num_limit_  (static upper bound)
+//   A  = input_desc[0].dims.d[0] (actual num_act_in at runtime)
+//   P  = is_subm ? A : N         (pair_fwd_size_padded)
+//   MC = mask_count              (1 or 2, depending on split-mask algo)
+//
+// ── workspace (single contiguous buffer from TensorRT) ──────────────────
+//
+//  ┌─────────────────────────────────────────────────┐  offset 0
+//  │  spconv internal workspace                      │
+//  │  (hash tables, temp indices, etc.)              │
+//  │  size: spconv_ws_size                           │
+//  ├─────────────────────────────────────────────────┤
+//  │  indices_kernel_num       [KV]                  │  int32
+//  ├─────────────────────────────────────────────────┤
+//  │  (non-subm only)                                │
+//  │  pair_bwd_padded          [KV x N]              │  int32
+//  │  pair_mask_bwd_padded     [MC x N]              │  int32
+//  │  mask_argsort_bwd_padded  [MC x N]              │  int32
+//  ├─────────────────────────────────────────────────┤
+//  │  thrust_tmp               [kThrustTempBytes]    │  uint8
+//  └─────────────────────────────────────────────────┘
+//
+// ── output blobs (each provided by TensorRT as a separate buffer) ───────
+//
+//  outputs[0]  out_indices           [P x 4]       int32
+//  outputs[1]  pair_fwd_padded       [KV x P]      int32
+//  outputs[2]  pair_mask_fwd_padded  [MC x P]      int32
+//  outputs[3]  mask_argsort_fwd      [MC x P]      int32
+//  outputs[4]  num_act_out           scalar        int32
+//
+// For subm convolutions P = A (sized to the actual input), while for
+// regular (non-subm) convolutions P = N (the static upper bound).
+// =========================================================================
+
 std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
   PluginTensorDesc const * input_desc, [[maybe_unused]] PluginTensorDesc const * output_desc,
   void const * const * inputs, void * const * outputs, [[maybe_unused]] void * workspace,
@@ -295,8 +337,6 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
   tv::Tensor out_indices = tv::from_blob(
     outputs[0], {is_subm ? input_desc[0].dims.d[0] : out_indices_num_limit_, 4}, tv::int32, 0);
 
-  // Allocate indices_kernel_num from the workspace instead of tv::zeros to avoid cudaMalloc during
-  // CUDA graph capture. The extra region sits right after the spconv workspace area.
   int spconv_ws_size = SpconvOps::get_indice_gen_workspace_size(
     kernel_volume, out_indices_num_limit_, out_indices_num_limit_, out_indices_num_limit_, is_subm,
     use_int64_hash_k, use_direct_table);
@@ -315,8 +355,6 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
 
   tv::Tensor input_indices = tv::from_blob(inputs[0], {input_desc[0].dims.d[0], 4}, tv::int32, 0);
 
-  // Pre-allocate thrust temporary buffer from workspace to avoid cudaMalloc during CUDA graph
-  // capture. Compute the offset past all other extra workspace regions.
   std::size_t thrust_tmp_offset =
     static_cast<std::size_t>(spconv_ws_size) + kernel_volume * tv::detail::sizeof_dtype(tv::int32);
   if (!is_subm) {
@@ -454,27 +492,21 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
 
   size_t workspace_size = 0;
 
-  // query workspace size.
   workspace_size += static_cast<size_t>(SpconvOps::get_indice_gen_workspace_size(
     kernel_volume, out_indices_num_limit_, out_indices_num_limit_, out_indices_num_limit_, is_subm,
     use_int64_hash_k, use_direct_table));
 
-  // Additional space for indices_kernel_num tensor (kernel_volume * int32).
   workspace_size += static_cast<std::size_t>(kernel_volume) * tv::detail::sizeof_dtype(tv::int32);
 
-  // Additional space for bwd tensors (only used when !is_subm).
   if (!is_subm) {
     bool is_split_mask =
       params_.algo == static_cast<std::int64_t>(tv::gemm::SparseConvAlgo::kMaskSplitImplicitGemm);
     int mask_count = is_split_mask ? 2 : 1;
 
-    // pair_bwd_padded: {kernel_volume, out_indices_num_limit_}
     workspace_size += static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ *
                       tv::detail::sizeof_dtype(tv::int32);
-    // pair_mask_bwd_padded: {mask_count, out_indices_num_limit_}
     workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ *
                       tv::detail::sizeof_dtype(tv::int32);
-    // mask_argsort_bwd_padded: {mask_count, out_indices_num_limit_}
     workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ *
                       tv::detail::sizeof_dtype(tv::int32);
   }
