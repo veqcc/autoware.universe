@@ -306,7 +306,8 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     tv::from_blob(indices_kernel_num_ptr, {kernel_volume}, tv::int32, 0);
 
   {
-    cudaError_t status = cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
+    cudaError_t status =
+      cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
     if (status != cudaSuccess) {
       return status;
     }
