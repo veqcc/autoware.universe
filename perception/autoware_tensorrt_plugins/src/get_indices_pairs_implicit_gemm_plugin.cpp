@@ -304,7 +304,13 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
 
   tv::Tensor indices_kernel_num =
     tv::from_blob(indices_kernel_num_ptr, {kernel_volume}, tv::int32, 0);
-  cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
+
+  {
+    cudaError_t status = cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
+    if (status != cudaSuccess) {
+      return status;
+    }
+  }
 
   tv::Tensor input_indices = tv::from_blob(inputs[0], {input_desc[0].dims.d[0], 4}, tv::int32, 0);
 
