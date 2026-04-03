@@ -307,7 +307,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
 
   {
     cudaError_t status =
-      cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * sizeof(tv::int32), stream);
+      cudaMemsetAsync(indices_kernel_num_ptr, 0, kernel_volume * tv::detail::sizeof_dtype(tv::int32), stream);
     if (status != cudaSuccess) {
       return status;
     }
@@ -318,14 +318,14 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
   // Pre-allocate thrust temporary buffer from workspace to avoid cudaMalloc during CUDA graph
   // capture. Compute the offset past all other extra workspace regions.
   std::size_t thrust_tmp_offset =
-    static_cast<std::size_t>(spconv_ws_size) + kernel_volume * sizeof(tv::int32);
+    static_cast<std::size_t>(spconv_ws_size) + kernel_volume * tv::detail::sizeof_dtype(tv::int32);
   if (!is_subm) {
     thrust_tmp_offset +=
-      static_cast<std::size_t>(kernel_volume) * static_num_act_in * sizeof(tv::int32);
+      static_cast<std::size_t>(kernel_volume) * static_num_act_in * tv::detail::sizeof_dtype(tv::int32);
     thrust_tmp_offset +=
-      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32);
+      static_cast<std::size_t>(mask_count) * static_num_act_in * tv::detail::sizeof_dtype(tv::int32);
     thrust_tmp_offset +=
-      static_cast<std::size_t>(mask_count) * static_num_act_in * sizeof(tv::int32);
+      static_cast<std::size_t>(mask_count) * static_num_act_in * tv::detail::sizeof_dtype(tv::int32);
   }
 
   tv::Tensor thrust_tmp = tv::from_blob(
@@ -359,15 +359,15 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     // Allocate bwd tensors from the workspace instead of tv::empty to avoid cudaMalloc during
     // CUDA graph capture. They are placed after indices_kernel_num in the workspace.
     std::uint8_t * extra_ptr =
-      static_cast<std::uint8_t *>(indices_kernel_num_ptr) + kernel_volume * sizeof(tv::int32);
+      static_cast<std::uint8_t *>(indices_kernel_num_ptr) + kernel_volume * tv::detail::sizeof_dtype(tv::int32);
 
     tv::Tensor pair_bwd_padded =
       tv::from_blob(extra_ptr, {kernel_volume, static_num_act_in}, tv::int32, 0);
-    extra_ptr += kernel_volume * static_num_act_in * sizeof(tv::int32);
+    extra_ptr += kernel_volume * static_num_act_in * tv::detail::sizeof_dtype(tv::int32);
 
     tv::Tensor pair_mask_bwd_padded =
       tv::from_blob(extra_ptr, {mask_count, static_num_act_in}, tv::int32, 0);
-    extra_ptr += mask_count * static_num_act_in * sizeof(tv::int32);
+    extra_ptr += mask_count * static_num_act_in * tv::detail::sizeof_dtype(tv::int32);
 
     tv::Tensor mask_argsort_bwd_padded =
       tv::from_blob(extra_ptr, {mask_count, static_num_act_in}, tv::int32, 0);
@@ -458,7 +458,7 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
     use_int64_hash_k, use_direct_table));
 
   // Additional space for indices_kernel_num tensor (kernel_volume * int32).
-  workspace_size += static_cast<std::size_t>(kernel_volume) * sizeof(tv::int32);
+  workspace_size += static_cast<std::size_t>(kernel_volume) * tv::detail::sizeof_dtype(tv::int32);
 
   // Additional space for bwd tensors (only used when !is_subm).
   if (!is_subm) {
@@ -468,13 +468,13 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
 
     // pair_bwd_padded: {kernel_volume, out_indices_num_limit_}
     workspace_size +=
-      static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * sizeof(tv::int32);
+      static_cast<std::size_t>(kernel_volume) * out_indices_num_limit_ * tv::detail::sizeof_dtype(tv::int32);
     // pair_mask_bwd_padded: {mask_count, out_indices_num_limit_}
     workspace_size +=
-      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
+      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * tv::detail::sizeof_dtype(tv::int32);
     // mask_argsort_bwd_padded: {mask_count, out_indices_num_limit_}
     workspace_size +=
-      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * sizeof(tv::int32);
+      static_cast<std::size_t>(mask_count) * out_indices_num_limit_ * tv::detail::sizeof_dtype(tv::int32);
   }
 
   return workspace_size;
