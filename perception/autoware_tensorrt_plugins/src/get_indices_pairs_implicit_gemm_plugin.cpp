@@ -347,6 +347,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
     ws_tensors.emplace(
       SPCONV_ALLOC_INDICE_NUM_PER_LOC, indices_kernel_num);  // cSpell:ignore INDICE
     StaticAllocator alloc(ws_tensors);
+    alloc.thrust_tmp_tensor_ = thrust_tmp;
 
     // cSpell:ignore indice
     pair_res = SpconvOps::get_indice_pairs_implicit_gemm(
@@ -386,6 +387,7 @@ std::int32_t GetIndicesPairsImplicitGemmPlugin::enqueue(
       SPCONV_ALLOC_INDICE_NUM_PER_LOC, indices_kernel_num);  // cSpell:ignore INDICE
 
     StaticAllocator alloc(ws_tensors);
+    alloc.thrust_tmp_tensor_ = thrust_tmp;
 
     // cSpell:ignore indice
     pair_res = SpconvOps::get_indice_pairs_implicit_gemm(
@@ -476,6 +478,8 @@ std::size_t GetIndicesPairsImplicitGemmPlugin::getWorkspaceSize(
     workspace_size += static_cast<std::size_t>(mask_count) * out_indices_num_limit_ *
                       tv::detail::sizeof_dtype(tv::int32);
   }
+
+  workspace_size += kThrustTempBytes;
 
   return workspace_size;
 }
